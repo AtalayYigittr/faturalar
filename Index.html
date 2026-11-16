@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <?!= include('Stil'); ?>
+</head>
+<body>
+  <header class="ust">
+    <h1>Harcamalarım</h1>
+    <nav class="menu" id="menu">
+      <button data-sayfa="yeni" class="aktif"><span>＋</span>Yeni</button>
+      <button data-sayfa="kayitlar"><span>☰</span>Kayıtlar<b id="kontrol-rozet" hidden></b></button>
+      <button data-sayfa="rapor"><span>▥</span>Rapor</button>
+      <button data-sayfa="ayarlar"><span>⚙</span>Ayarlar</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ YENİ / DÜZENLE ============ -->
+    <section id="s-yeni" class="sayfa aktif">
+      <div class="kart" id="yukle-kart">
+        <div class="yukle-btnler">
+          <label class="btn buyuk">📷 Fotoğraf çek
+            <input type="file" id="kamera" accept="image/*" capture="environment" hidden>
+          </label>
+          <label class="btn buyuk ikincil">📄 Dosya yükle
+            <input type="file" id="dosya" accept="image/*,application/pdf,.pdf,.xml,text/xml,application/xml" hidden>
+          </label>
+        </div>
+        <p class="ipucu">Fiş / fatura fotoğrafı, PDF veya e-Fatura XML. Okunan alanları kaydetmeden önce kontrol edin; sarı alanlar okunamadı ya da şüpheli.</p>
+        <div id="okuma-durum" class="okuma-durum" hidden></div>
+        <img id="onizleme" class="onizleme" alt="Belge önizleme" hidden>
+        <details id="ham-kutu" hidden><summary>Okunan ham metin</summary><pre id="ham-metin"></pre></details>
+      </div>
+
+      <form id="form" class="kart" autocomplete="off" novalidate>
+        <h2 id="form-baslik">Yeni harcama</h2>
+        <input type="hidden" id="f-id">
+        <input type="hidden" id="f-belgeUrl">
+        <input type="hidden" id="f-kaynak">
+
+        <div class="ikili">
+          <label>Tarih<input type="date" id="f-tarih" required></label>
+          <label>Kategori
+            <select id="f-kategori" required></select>
+          </label>
+        </div>
+        <div class="yeni-kat" id="yeni-kat-kutu" hidden>
+          <input id="yeni-kat-ad" placeholder="Yeni kategori adı">
+          <button type="button" class="btn kucuk" id="yeni-kat-ekle">Ekle</button>
+          <button type="button" class="btn kucuk ikincil" id="yeni-kat-iptal">Vazgeç</button>
+        </div>
+
+        <label>Açıklama (alım içeriği)<input id="f-aciklama" maxlength="250" required placeholder="Örn. Ofis kırtasiye alımı"></label>
+
+        <div class="ikili">
+          <label>Firma<input id="f-firma" placeholder="Satıcı"></label>
+          <label>Belge no<input id="f-belgeNo"></label>
+        </div>
+
+        <div class="ikili">
+          <label>Toplam tutar (KDV dahil, ₺)<input id="f-toplam" inputmode="decimal" required placeholder="0,00"></label>
+          <label>KDV tutarı (₺)<input id="f-kdv" inputmode="decimal" placeholder="0,00"></label>
+        </div>
+        <div class="oranlar">
+          <span>KDV'yi orandan hesapla:</span>
+          <button type="button" data-oran="1">%1</button>
+          <button type="button" data-oran="10">%10</button>
+          <button type="button" data-oran="20">%20</button>
+          <button type="button" data-oran="0">KDV yok</button>
+          <span class="soluk" id="kdv-haric"></span>
+        </div>
+
+        <label>Not<input id="f-not" placeholder="İsteğe bağlı"></label>
+        <a id="f-belge-link" class="belge-link" target="_blank" rel="noopener" hidden>📎 Kayıtlı belgeyi aç</a>
+
+        <div class="butonlar">
+          <button type="submit" class="btn" id="kaydet-btn">Kaydet</button>
+          <button type="button" class="btn ikincil" id="temizle-btn">Temizle</button>
+          <button type="button" class="btn tehlike" id="sil-btn" hidden>Sil</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ============ KAYITLAR ============ -->
+    <section id="s-kayitlar" class="sayfa">
+      <div class="kart filtre">
+        <select id="k-yil"></select>
+        <select id="k-ay"></select>
+        <select id="k-kategori"></select>
+        <input id="k-ara" type="search" placeholder="Ara: açıklama, firma, belge no">
+        <label class="onay"><input type="checkbox" id="k-kontrol"> Sadece kontrol bekleyenler</label>
+      </div>
+      <div class="ozet-satir" id="k-ozet"></div>
+      <div id="liste" class="liste"></div>
+    </section>
+
+    <!-- ============ RAPOR ============ -->
+    <section id="s-rapor" class="sayfa">
+      <div class="kart filtre">
+        <div class="anahtar" id="r-mod">
+          <button data-mod="aylik" class="aktif">Aylık</button>
+          <button data-mod="yillik">Yıllık</button>
+        </div>
+        <select id="r-yil"></select>
+      </div>
+      <div class="kutucuklar" id="r-kutucuk"></div>
+      <div class="kart">
+        <h3 id="r-grafik-baslik"></h3>
+        <div id="r-grafik" class="grafik" role="img"></div>
+        <p class="soluk kucuk-yazi">Çubuğun koyu kısmı KDV'yi gösterir. Ayrıntı için bir aya dokunun.</p>
+      </div>
+      <div class="kart">
+        <h3 id="r-tablo-baslik"></h3>
+        <div class="tablo-sar"><table id="r-tablo"></table></div>
+      </div>
+      <div class="kart">
+        <h3 id="r-kat-baslik">Kategorilere göre</h3>
+        <div class="tablo-sar"><table id="r-kat"></table></div>
+      </div>
+    </section>
+
+    <!-- ============ AYARLAR ============ -->
+    <section id="s-ayarlar" class="sayfa">
+      <div class="kart">
+        <h3>Kategoriler</h3>
+        <div id="kat-liste" class="cipler"></div>
+        <div class="yeni-kat">
+          <input id="kat-yeni" placeholder="Yeni kategori">
+          <button type="button" class="btn kucuk" id="kat-ekle">Ekle</button>
+        </div>
+        <p class="soluk kucuk-yazi">Bir kategoriyi silmek eski kayıtları değiştirmez.</p>
+      </div>
+
+      <div class="kart">
+        <h3>Fiş okuma (yapay zekâ — isteğe bağlı)</h3>
+        <p class="soluk kucuk-yazi">Anahtar girilmezse ücretsiz Google OCR kullanılır. Gemini anahtarı fişlerde çok daha doğru sonuç verir: <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener">aistudio.google.com/apikey</a></p>
+        <label>Gemini API anahtarı <span id="gemini-durum" class="rozet"></span>
+          <input id="a-gemini" type="password" placeholder="Değiştirmek için yeni anahtar girin (silmek için -)">
+        </label>
+        <label>Model<input id="a-model" placeholder="gemini-2.5-flash"></label>
+      </div>
+
+      <div class="kart">
+        <h3>Bizim Hesap (salt okunur)</h3>
+        <p class="soluk kucuk-yazi">Program Bizim Hesap'a hiçbir veri yazmaz; yalnızca cari listesi ve cari ekstrelerini okur. Ekstrede türü filtreye uyan hareketler (ör. "Alış Faturası") "Kontrol Et" durumuyla aktarılır.</p>
+        <label>API token <span id="bh-durum" class="rozet"></span>
+          <input id="a-bh-token" type="password" placeholder="Değiştirmek için yeni token girin (silmek için -)">
+        </label>
+        <div class="ikili">
+          <label>Şu tarihten itibaren aktar<input type="date" id="a-bh-baslangic"></label>
+          <label>Kontrol sıklığı
+            <select id="a-bh-saat">
+              <option value="1">Saatte bir</option><option value="2">2 saatte bir</option>
+              <option value="4">4 saatte bir</option><option value="6">6 saatte bir</option>
+              <option value="12">12 saatte bir</option>
+            </select>
+          </label>
+        </div>
+        <div class="ikili">
+          <label>Hareket türü filtresi<input id="a-bh-filtre" placeholder="alış|alis|gider|masraf"></label>
+          <label>Varsayılan KDV oranı (%)<input id="a-bh-kdv" inputmode="decimal" placeholder="Boş = KDV'yi ben gireceğim"></label>
+        </div>
+        <label class="onay"><input type="checkbox" id="a-bh-aktif"> Otomatik aktarımı aç</label>
+        <p class="soluk kucuk-yazi" id="bh-son"></p>
+        <div class="butonlar">
+          <button type="button" class="btn ikincil" id="bh-test">Bağlantıyı test et</button>
+          <button type="button" class="btn ikincil" id="bh-simdi">Şimdi aktar</button>
+        </div>
+        <pre id="bh-test-sonuc" class="test-sonuc" hidden></pre>
+      </div>
+
+      <div class="butonlar"><button type="button" class="btn" id="ayar-kaydet">Ayarları kaydet</button></div>
+
+      <div class="kart">
+        <h3>Bağlantılar</h3>
+        <p><a id="link-sheet" target="_blank" rel="noopener">📊 Google Sheet'i aç</a></p>
+        <p><a id="link-klasor" target="_blank" rel="noopener">📁 Belge klasörünü aç</a></p>
+      </div>
+    </section>
+  </main>
+
+  <div id="modal" class="modal" hidden>
+    <div class="modal-kutu">
+      <p id="modal-mesaj"></p>
+      <div class="butonlar">
+        <button class="btn" id="modal-evet">Evet</button>
+        <button class="btn ikincil" id="modal-hayir">Vazgeç</button>
+      </div>
+    </div>
+  </div>
+  <div id="bildirim" class="bildirim" hidden></div>
+
+  <?!= include('App'); ?>
+</body>
+</html>
